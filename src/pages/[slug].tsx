@@ -4,14 +4,13 @@
  */
 import { GetStaticProps, GetStaticPaths } from "next";
 import Head from "next/head";
-import { SITE_NAME } from "@/config";
+import { SITE_NAME, SITE_DOMAIN } from "@/config";
 import { getPage, getDatabase, getAdjacentPosts, getRelatedPosts } from "@/lib/notion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarAlt, faFolder, faTag } from "@fortawesome/free-solid-svg-icons";
 
-// 記事の詳細ページで扱うデータ型
 type PageProps = {
   title: string;
   content: string;
@@ -33,15 +32,34 @@ export default function Post({
   nextPost,
   relatedPosts,
 }: PageProps) {
+  // 動的OG画像のURLを組み立て
+  const ogImageUrl = `${SITE_DOMAIN}/api/og?title=${encodeURIComponent(
+    title
+  )}&category=${encodeURIComponent(category)}`;
+
   return (
-    <div className="container" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div
+      className="container"
+      style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+    >
       <Head>
         <title>{`${title} | ${SITE_NAME}`}</title>
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={`カテゴリ: ${category}`} />
+        <meta property="og:image" content={ogImageUrl} />
+        <meta property="og:type" content="article" />
       </Head>
 
       <Header />
 
-      <main className="section" style={{ paddingTop: "100px", paddingBottom: "100px", minHeight: "calc(100vh - 80px)" }}>
+      <main
+        className="section"
+        style={{
+          paddingTop: "100px",
+          paddingBottom: "100px",
+          minHeight: "calc(100vh - 80px)",
+        }}
+      >
         <div className="container">
           <h1 className="title">{title}</h1>
 
@@ -51,7 +69,9 @@ export default function Post({
 
           <p className="has-text-grey">
             <FontAwesomeIcon icon={faFolder} className="icon has-text-warning" />
-            <span style={{ marginLeft: "5px", fontWeight: "bold" }}>{category}</span>
+            <span style={{ marginLeft: "5px", fontWeight: "bold" }}>
+              {category}
+            </span>
           </p>
 
           {tags.length > 0 && (
@@ -65,24 +85,37 @@ export default function Post({
             </div>
           )}
 
-          <div className="content" style={{ marginTop: "40px", marginBottom: "60px" }} dangerouslySetInnerHTML={{ __html: content }} />
+          <div
+            className="content"
+            style={{ marginTop: "40px", marginBottom: "60px" }}
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
 
-          <hr style={{ border: "none", borderTop: "2px dotted #ddd", marginBottom: "40px" }} />
+          <hr
+            style={{ border: "none", borderTop: "2px dotted #ddd", marginBottom: "40px" }}
+          />
 
-          <div className="navigation mt-6" style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+          <div
+            className="navigation mt-6"
+            style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}
+          >
             {prevPost && (
               <a href={`/${prevPost.slug}`} className="button is-light is-fullwidth">
-                <span style={{ marginRight: "10px", fontSize: "18px" }}>←</span> {prevPost.title}
+                <span style={{ marginRight: "10px", fontSize: "18px" }}>←</span>
+                {prevPost.title}
               </a>
             )}
             {nextPost && (
               <a href={`/${nextPost.slug}`} className="button is-light is-fullwidth">
-                {nextPost.title} <span style={{ marginLeft: "10px", fontSize: "18px" }}>→</span>
+                {nextPost.title}
+                <span style={{ marginLeft: "10px", fontSize: "18px" }}>→</span>
               </a>
             )}
           </div>
 
-          <hr style={{ border: "none", borderTop: "2px dotted #ddd", margin: "60px 0" }} />
+          <hr
+            style={{ border: "none", borderTop: "2px dotted #ddd", margin: "60px 0" }}
+          />
 
           {relatedPosts.length > 0 && (
             <div>
@@ -93,8 +126,12 @@ export default function Post({
                     <div className="card">
                       <div className="card-content">
                         <h3 className="title is-5">{post.title}</h3>
-                        <p className="subtitle is-6" style={{ margin: "10px 0" }}>{post.publishedDate}</p>
-                        <a href={`/${post.slug}`} className="button is-info">記事を読む →</a>
+                        <p className="subtitle is-6" style={{ margin: "10px 0" }}>
+                          {post.publishedDate}
+                        </p>
+                        <a href={`/${post.slug}`} className="button is-info">
+                          記事を読む →
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -113,11 +150,9 @@ export default function Post({
 export const getStaticPaths: GetStaticPaths = async () => {
   const rawData = await getDatabase();
 
-  const paths = rawData.map((post) =>
-    ({
-      params: { slug: post.slug },
-    }) satisfies { params: { slug: string } }
-  );
+  const paths = rawData.map((post) => ({
+    params: { slug: post.slug },
+  }));
 
   return {
     paths,
@@ -146,7 +181,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       prevPost,
       nextPost,
       relatedPosts,
-    } satisfies PageProps,
+    },
     revalidate: 60,
   };
-};
+}

@@ -10,7 +10,6 @@ export default async function handler(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const title = searchParams.get("title") || "Default Title";
   const category = searchParams.get("category") || "Uncategorized";
-  const siteName = ""; 
 
   return new ImageResponse(
     (
@@ -26,6 +25,7 @@ export default async function handler(req: NextRequest) {
           fontFamily: '"LINESeed", Arial, sans-serif',
         }}
       >
+        {/* 上部のバー */}
         <div
           style={{
             width: "100%",
@@ -39,9 +39,9 @@ export default async function handler(req: NextRequest) {
             color: "white",
           }}
         >
-          {siteName}
         </div>
 
+        {/* 中央コンテンツ */}
         <div
           style={{
             display: "flex",
@@ -51,6 +51,7 @@ export default async function handler(req: NextRequest) {
             padding: "0 80px",
           }}
         >
+          {/* カテゴリ */}
           <div
             style={{
               fontSize: "24px",
@@ -59,22 +60,23 @@ export default async function handler(req: NextRequest) {
               color: "white",
               padding: "8px 16px",
               borderRadius: "10px",
-              display: "flex", 
+              display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              minWidth: "120px", 
+              minWidth: "120px",
               maxWidth: "200px",
             }}
           >
             {category}
           </div>
 
+          {/* タイトル */}
           <h1
             style={{
               fontSize: "56px",
               fontWeight: "700",
-              margin: "20px 0 0 0", 
-              textAlign: "left", 
+              margin: "20px 0 0 0",
+              textAlign: "left",
               maxWidth: "1040px",
               lineHeight: "1.2",
               wordBreak: "break-word",
@@ -84,6 +86,7 @@ export default async function handler(req: NextRequest) {
           </h1>
         </div>
 
+        {/* 下部のバー */}
         <div
           style={{
             width: "100%",

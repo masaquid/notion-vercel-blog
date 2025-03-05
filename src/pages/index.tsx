@@ -5,7 +5,13 @@
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { SITE_NAME, SITE_DESCRIPTION, PAGE_SIZE } from "@/config";
+import {
+  SITE_NAME,
+  SITE_DESCRIPTION,
+  PAGE_SIZE,
+  SITE_DOMAIN,
+  TOP_OG_IMAGE,
+} from "@/config";
 import { getDatabase } from "@/lib/notion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -29,12 +35,15 @@ type HomeProps = {
   currentPage: number;
 };
 
-
 export default function Home({ items, totalPages, currentPage }: HomeProps) {
   return (
     <div className="container">
       <Head>
         <title>{SITE_NAME}</title>
+        {/* トップページは自作のOG画像を使用する想定（カスタムOG） */}
+        <meta property="og:title" content={SITE_NAME} />
+        <meta property="og:image" content={`${SITE_DOMAIN}${TOP_OG_IMAGE}`} />
+        <meta property="og:type" content="website" />
       </Head>
 
       <Header />
@@ -68,17 +77,26 @@ export default function Home({ items, totalPages, currentPage }: HomeProps) {
                       </h2>
 
                       <div className="icon-text">
-                        <FontAwesomeIcon icon={faCalendarAlt} className="icon has-text-grey" />
+                        <FontAwesomeIcon
+                          icon={faCalendarAlt}
+                          className="icon has-text-grey"
+                        />
                         <span>{item.publishedDate}</span>
                       </div>
 
                       <div className="icon-text">
-                        <FontAwesomeIcon icon={faFolder} className="icon has-text-warning" />
+                        <FontAwesomeIcon
+                          icon={faFolder}
+                          className="icon has-text-warning"
+                        />
                         <span>{item.category}</span>
                       </div>
 
                       <div className="icon-text">
-                        <FontAwesomeIcon icon={faTag} className="icon has-text-info" />
+                        <FontAwesomeIcon
+                          icon={faTag}
+                          className="icon has-text-info"
+                        />
                         <div className="tags">
                           {item.tags.map((tag, index) => (
                             <span key={index} className="tag is-light is-info">
@@ -93,7 +111,10 @@ export default function Home({ items, totalPages, currentPage }: HomeProps) {
                       )}
 
                       {/* 内部リンクは <Link> で */}
-                      <Link href={item.url} className="button is-light is-info is-fullwidth mt-3">
+                      <Link
+                        href={item.url}
+                        className="button is-light is-info is-fullwidth mt-3"
+                      >
                         記事を読む →
                       </Link>
                     </div>
@@ -146,7 +167,7 @@ export default function Home({ items, totalPages, currentPage }: HomeProps) {
  */
 export const getServerSideProps: GetServerSideProps<HomeProps> = async ({ query }) => {
   const rawData = await getDatabase();
-  
+
   const today = new Date().toISOString().split("T")[0];
 
   const publishedData = rawData
@@ -163,17 +184,15 @@ export const getServerSideProps: GetServerSideProps<HomeProps> = async ({ query 
   const sliced = publishedData.slice(startIndex, endIndex);
 
   // 表示用データを整形
-  const items = sliced.map((item) =>
-    ({
-      id: item.id,
-      title: item.title || "無題",
-      category: item.category || "未分類",
-      tags: item.tags || [],
-      summary: item.summary || "",
-      url: `/${item.slug}`, // slugから個別ページへのパス
-      publishedDate: item.publishedDate || "",
-    }) satisfies PageData
-  );
+  const items = sliced.map((item) => ({
+    id: item.id,
+    title: item.title || "無題",
+    category: item.category || "未分類",
+    tags: item.tags || [],
+    summary: item.summary || "",
+    url: `/${item.slug}`, // slugから個別ページへのパス
+    publishedDate: item.publishedDate || "",
+  }));
 
   return {
     props: {

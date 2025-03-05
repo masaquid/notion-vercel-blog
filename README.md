@@ -8,20 +8,25 @@ This project aims to create a blog using **Notion** as the data source, hosted o
 Though I'm new to **TypeScript** and **Next.js**, I managed to build it with the help of AI.  
 There's still plenty of room for improvement, so feel free to modify or refactor as you like✨  
 
+## デモサイト
+[https://notion-vercel-blog.vercel.app/](https://notion-vercel-blog.vercel.app/)
+
 ---
 
 ## ✨ 機能概要
 
 - **Notion データの取得**  
   - Notion API を通して記事情報を取得し、公開日やステータスでフィルタ  
-  - **対応ブロック**: `paragraph`, `heading_1`, `heading_2`, `heading_3`, `numbered_list_item`, `bulleted_list_item`, `quote`, `image`  
-  - **非対応ブロック**:   それ以外。`fold`（折りたたみ）などは未サポート
-  - ※2025/03/05 `strong`, `em`, `hr`, `anchor` と、ブロック内改行・空ブロック（行間）に対応しました。  
+  - **対応ブロック**: `paragraph`, `heading_1`, `heading_2`, `heading_3`, `numbered_list_item`, `bulleted_list_item`, `quote`, `image`, `strong`, `em`, `hr`, `anchor`, ブロック内改行・空ブロック（行間）  
+  - **非対応ブロック**: それ以外。`fold`（折りたたみ）などは未サポート
+
 - **🚀 トップページ**  
   - SSR で記事一覧を表示（ページネーション機能付き）
+  
 - **📖 個別ページ**  
   - SSG + ISR を用いてビルド後に静的ページを生成し、一定時間ごとに再生成  
-  - 前後の記事や関連記事の表示に対応
+  - 前後の記事や関連記事（カテゴリ一致）の表示
+
 - **🔍 OGP**  
   - OGP画像は Next.js/Canvas の機能によって自動生成
 
