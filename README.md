@@ -85,6 +85,8 @@ Git リポジトリにプッシュして Vercel と連携
 または Vercel CLI (vercel --prod) で手動デプロイ  
 環境変数は Vercel の Project Settings → Environment Variables で登録してください  
 
+サイト名や説明、1ページの表示件数は `src/config/index.ts` で設定します。  
+
 ---
 
 ## 🎨 フォントについて
