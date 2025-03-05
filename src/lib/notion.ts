@@ -3,16 +3,11 @@ import {
   QueryDatabaseResponse,
   PageObjectResponse,
   BlockObjectResponse,
-  // TitlePropertyValue,
-  // RichTextPropertyValue,
-  // SelectPropertyValue,
-  // MultiSelectPropertyValue,
-  // DatePropertyValue,
+  RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const databaseId = process.env.NOTION_DATABASE_ID as string;
-
 
 /**
  * Notionの投稿データを表す型
@@ -32,7 +27,6 @@ export type NotionPost = {
  * Databaseの一覧を取得し、必要なフィールドを整形して返す
  */
 export async function getDatabase(): Promise<NotionPost[]> {
-
   try {
     const response = await notion.databases.query({
       database_id: databaseId,
@@ -95,18 +89,12 @@ export async function getAdjacentPosts(currentPublishedDate: string) {
 
   const prevPost =
     currentIndex > 0
-      ? {
-          title: sorted[currentIndex - 1].title,
-          slug: sorted[currentIndex - 1].slug,
-        }
+      ? { title: sorted[currentIndex - 1].title, slug: sorted[currentIndex - 1].slug }
       : null;
 
   const nextPost =
     currentIndex < sorted.length - 1
-      ? {
-          title: sorted[currentIndex + 1].title,
-          slug: sorted[currentIndex + 1].slug,
-        }
+      ? { title: sorted[currentIndex + 1].title, slug: sorted[currentIndex + 1].slug }
       : null;
 
   return { prevPost, nextPost };
@@ -115,15 +103,10 @@ export async function getAdjacentPosts(currentPublishedDate: string) {
 /**
  * 関連記事を取得する
  */
-export async function getRelatedPosts(
-  category: string,
-  currentId: string
-): Promise<NotionPost[]> {
+export async function getRelatedPosts(category: string, currentId: string): Promise<NotionPost[]> {
   const allPosts = await getDatabase();
 
-  const filtered = allPosts.filter(
-    (p) => p.category === category && p.id !== currentId
-  );
+  const filtered = allPosts.filter((p) => p.category === category && p.id !== currentId);
 
   const sorted = filtered.sort((a, b) =>
     a.publishedDate > b.publishedDate ? -1 : 1
@@ -134,77 +117,115 @@ export async function getRelatedPosts(
 
 /**
  * NotionブロックをHTMLに変換する
+ *  - paragraph中の改行(\n)を <br> に変換
+ *  - 空ブロックは空行として <p><br/></p> を表示
+ *  - リンクは href プロパティで <a> タグを生成
+ *  - 水平線(divider)に対応
  */
 async function getHtmlFromBlocks(pageId: string): Promise<string> {
   try {
     const response = await notion.blocks.children.list({ block_id: pageId });
-
-    // ✅ BlockObjectResponse 型のデータだけをフィルタリング
     const blocks = response.results.filter(
       (block): block is BlockObjectResponse => "type" in block
     );
 
     return blocks
-    .map((block) => {
-      switch (block.type) {
-        case "paragraph":
-          return `<p>${extractTextFromBlock(block.paragraph?.rich_text)}</p>`;
-        case "heading_1":
-          return `<h1>${extractTextFromBlock(block.heading_1?.rich_text)}</h1>`;
-        case "heading_2":
-          return `<h2>${extractTextFromBlock(block.heading_2?.rich_text)}</h2>`;
-        case "heading_3":
-          return `<h3>${extractTextFromBlock(block.heading_3?.rich_text)}</h3>`;
-        case "bulleted_list_item":
-          return `<ul><li>${extractTextFromBlock(
-            block.bulleted_list_item?.rich_text
-          )}</li></ul>`;
-        case "numbered_list_item":
-          return `<ol><li>${extractTextFromBlock(
-            block.numbered_list_item?.rich_text
-          )}</li></ol>`;
-        case "quote":
-          return `<blockquote>${extractTextFromBlock(block.quote?.rich_text)}</blockquote>`;
-  
-        // 画像ブロックの処理
-        case "image": {
-          const { type, caption } = block.image;
-  
-          // file.url または external.url から実際の画像URLを取得
-          let imageUrl = "";
-          if (type === "file") {
-            imageUrl = block.image.file.url;
-          } else if (type === "external") {
-            imageUrl = block.image.external.url;
-          }
-  
-          // キャプションがあればテキストを連結
-          const captionText =
-            caption?.map((richText) => richText.plain_text).join("") || "";
-  
-          // figure, figcaption を使った例
-          return `
-          <figure class="notion-figure">
-            <img
-              src="${imageUrl}"
-              alt="${captionText}"
-              class="notion-image"
-            />
-            ${
-              captionText
-                ? `<figcaption class="notion-figcaption">${captionText}</figcaption>`
-                : ""
-            }
-          </figure>
-        `;
-        }
-  
-        default:
-          return "";
-      }
-    })
-    .join("\n");  
+      .map((block) => {
+        switch (block.type) {
+          case "paragraph": {
+            const richText = block.paragraph?.rich_text || [];
+            const html = parseRichText(richText);
 
+            // 空の段落なら <p><br/></p>
+            if (!html.trim()) {
+              return `<p><br/></p>`;
+            }
+            return `<p>${html}</p>`;
+          }
+
+          case "heading_1": {
+            const richText = block.heading_1?.rich_text || [];
+            const html = parseRichText(richText);
+            return `<h1>${html}</h1>`;
+          }
+
+          case "heading_2": {
+            const richText = block.heading_2?.rich_text || [];
+            const html = parseRichText(richText);
+            return `<h2>${html}</h2>`;
+          }
+
+          case "heading_3": {
+            const richText = block.heading_3?.rich_text || [];
+            const html = parseRichText(richText);
+            return `<h3>${html}</h3>`;
+          }
+
+          case "bulleted_list_item": {
+            const richText = block.bulleted_list_item?.rich_text || [];
+            const html = parseRichText(richText);
+            return `<ul><li>${html}</li></ul>`;
+          }
+
+          case "numbered_list_item": {
+            const richText = block.numbered_list_item?.rich_text || [];
+            const html = parseRichText(richText);
+            return `<ol><li>${html}</li></ol>`;
+          }
+
+          case "quote": {
+            const richText = block.quote?.rich_text || [];
+            const html = parseRichText(richText);
+            return `<blockquote>${html}</blockquote>`;
+          }
+
+          // 水平線
+          case "divider": {
+            return `<hr/>`;
+          }
+
+          // 画像ブロックの処理 (既存)
+          case "image": {
+            const { type, caption } = block.image;
+            let imageUrl = "";
+
+            if (type === "file") {
+              imageUrl = block.image.file.url;
+            } else if (type === "external") {
+              imageUrl = block.image.external.url;
+            }
+
+            const captionText =
+              caption?.map((richText) => richText.plain_text).join("") || "";
+
+            return `
+              <figure style="max-width: 100%; margin: 1em 0;">
+                <img
+                  src="${imageUrl}"
+                  alt="${captionText}"
+                  style="
+                    max-width: 800px;
+                    max-height: 500px;
+                    object-fit: contain;
+                    display: block;
+                    margin: 0 auto;
+                  "
+                />
+                ${
+                  captionText
+                    ? `<figcaption style="text-align: center; font-size: 0.9em; color: #666;">${captionText}</figcaption>`
+                    : ""
+                }
+              </figure>
+            `;
+          }
+
+          // その他のブロックは未対応として空文字
+          default:
+            return "";
+        }
+      })
+      .join("\n");
   } catch (error) {
     console.error("getHtmlFromBlocks error:", error);
     return "";
@@ -212,20 +233,40 @@ async function getHtmlFromBlocks(pageId: string): Promise<string> {
 }
 
 /**
- * リッチテキスト配列から plain_text を結合
+ * リッチテキスト配列をHTML文字列に変換
+ *  - 改行(\n)は <br> に変換
+ *  - href があれば <a> で囲む
+ *  - annotations.bold, italic, code なども対応可能
  */
-function extractTextFromBlock(richTextArray?: { plain_text: string }[]): string {
-  return richTextArray?.map((text) => text.plain_text).join(" ") || "";
+function parseRichText(richTextArray: RichTextItemResponse[]): string {
+  return richTextArray
+    .map((richText) => {
+      const { href, plain_text, annotations } = richText;
+      let textHtml = plain_text.replace(/\n/g, "<br/>");
+
+      // 太字や斜体など
+      if (annotations.bold) {
+        textHtml = `<strong>${textHtml}</strong>`;
+      }
+      if (annotations.italic) {
+        textHtml = `<em>${textHtml}</em>`;
+      }
+      if (annotations.code) {
+        textHtml = `<code>${textHtml}</code>`;
+      }
+
+      // リンクがあるなら <a> で囲む
+      if (href) {
+        textHtml = `<a href="${href}" target="_blank" rel="noopener noreferrer">${textHtml}</a>`;
+      }
+
+      return textHtml;
+    })
+    .join("");
 }
 
 /**
- * 以下、各プロパティを「Notion上での型」に合わせて取得
- * - Slug はリッチテキスト型
- * - Name / Title はタイトル型 or リッチテキスト型
- * - Published Date は日付型
- * - Category はセレクト型
- * - Tags はマルチセレクト型
- * - Summary はリッチテキスト型
+ * 各プロパティを取得するヘルパー関数
  */
 function extractSlugFromPage(page: PageObjectResponse): string {
   const slugProp = page.properties.Slug;
@@ -236,15 +277,12 @@ function extractSlugFromPage(page: PageObjectResponse): string {
 }
 
 function extractTitleFromPage(page: PageObjectResponse): string {
-  // 例: Name or Title どちらかが Title型と仮定
   const nameProp = page.properties.Name;
   const titleProp = page.properties.Title;
 
-  // Name プロパティがタイトル型の場合
   if (nameProp?.type === "title") {
     return nameProp.title[0]?.plain_text.trim() || "";
   }
-  // Title プロパティがタイトル型の場合
   if (titleProp?.type === "title") {
     return titleProp.title[0]?.plain_text.trim() || "";
   }
