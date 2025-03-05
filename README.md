@@ -15,7 +15,8 @@ There's still plenty of room for improvement, so feel free to modify or refactor
 - **Notion データの取得**  
   - Notion API を通して記事情報を取得し、公開日やステータスでフィルタ  
   - **対応ブロック**: `paragraph`, `heading_1`, `heading_2`, `heading_3`, `numbered_list_item`, `bulleted_list_item`, `quote`, `image`  
-  - **非対応ブロック**:   それ以外。`fold`（折りたたみ）などは未サポート  
+  - **非対応ブロック**:   それ以外。`fold`（折りたたみ）などは未サポート
+  - ※2025/03/05 `strong`, `em`, `hr, `anchor` と、ブロック内改行・空ブロック（行間）に対応しました。  
 - **🚀 トップページ**  
   - SSR で記事一覧を表示（ページネーション機能付き）
 - **📖 個別ページ**  
