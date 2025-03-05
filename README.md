@@ -59,6 +59,8 @@ There's still plenty of room for improvement, so feel free to modify or refactor
 
 ## 💻 セットアップ手順
 
+デプロイまでの詳細な手順はブログで公開します。（執筆中）  
+
 1. **リポジトリをクローン**  
   ```bash
    git clone https://github.com/your-repo/notion-vercel-blog.git
