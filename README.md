@@ -39,7 +39,7 @@ There's still plenty of room for improvement, so feel free to modify or refactor
 - **Summary**: 記事概要や抜粋  
 
 詳細は実際のデータベースページを参考にしてください。  
-[notion-vercel-blog SampleDatabase](https://likelive.notion.site/1a50b819239d80c2a0b6d0e7a1490896?v=1a50b819239d80a7ba09000cb82c0b07)
+[notion-vercel-blog サンプルデータベース](https://likelive.notion.site/1a50b819239d80c2a0b6d0e7a1490896?v=1a50b819239d80a7ba09000cb82c0b07)
 
 ---
 
